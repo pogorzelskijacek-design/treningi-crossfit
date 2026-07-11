@@ -1,7 +1,10 @@
+import { useState } from 'react';
+import { CirclePlay } from 'lucide-react';
 import type { GeneratedWorkout, WorkoutSection } from '@/domain';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ExerciseVideoDialog } from '@/components/exercises/ExerciseVideoDialog';
 import { formatDateLong } from '@/lib/date';
 import { formatWeight } from '@/lib/weight';
 
@@ -10,7 +13,11 @@ interface GeneratedWorkoutViewProps {
   onLogWorkout?: () => void;
 }
 
+type ActiveExercise = { id: string; name: string } | null;
+
 export function GeneratedWorkoutView({ workout, onLogWorkout }: GeneratedWorkoutViewProps) {
+  const [active, setActive] = useState<ActiveExercise>(null);
+
   return (
     <div className="space-y-4">
       <Card>
@@ -39,7 +46,11 @@ export function GeneratedWorkoutView({ workout, onLogWorkout }: GeneratedWorkout
       </Card>
 
       {Object.values(workout.sections).map((section) => (
-        <SectionCard key={section.type} section={section} />
+        <SectionCard
+          key={section.type}
+          section={section}
+          onPlay={(id, name) => setActive({ id, name })}
+        />
       ))}
 
       {onLogWorkout && (
@@ -47,11 +58,23 @@ export function GeneratedWorkoutView({ workout, onLogWorkout }: GeneratedWorkout
           Log this workout
         </Button>
       )}
+
+      <ExerciseVideoDialog
+        exerciseId={active?.id}
+        exerciseName={active?.name}
+        open={active != null}
+        onOpenChange={(open) => !open && setActive(null)}
+      />
     </div>
   );
 }
 
-function SectionCard({ section }: { section: WorkoutSection }) {
+interface SectionCardProps {
+  section: WorkoutSection;
+  onPlay: (exerciseId: string, exerciseName: string) => void;
+}
+
+function SectionCard({ section, onPlay }: SectionCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -74,7 +97,15 @@ function SectionCard({ section }: { section: WorkoutSection }) {
                 className="flex flex-col gap-0.5 border-b border-border/60 pb-3 last:border-0 last:pb-0"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-medium">{item.exerciseName}</span>
+                  <button
+                    type="button"
+                    onClick={() => onPlay(item.exerciseId, item.exerciseName)}
+                    className="group flex items-center gap-1.5 text-left font-medium transition-colors hover:text-primary"
+                    title={`Watch ${item.exerciseName} demo`}
+                  >
+                    {item.exerciseName}
+                    <CirclePlay className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-red-500" />
+                  </button>
                   <span className="text-right text-sm text-muted-foreground">
                     {item.prescription}
                     {item.prescribedWeightKg != null && (

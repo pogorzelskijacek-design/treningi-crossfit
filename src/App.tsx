@@ -9,6 +9,7 @@ import { LogWorkoutPage } from '@/pages/LogWorkoutPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { ProgressPage } from '@/pages/ProgressPage';
 import { ProfilePage } from '@/pages/ProfilePage';
+import { ExerciseCatalogPage } from '@/pages/ExerciseCatalogPage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
               <Route index element={<DashboardPage />} />
               <Route path="generate" element={<GenerateWorkoutPage />} />
               <Route path="generate/log/:generatedWorkoutId" element={<LogWorkoutPage />} />
+              <Route path="exercises" element={<ExerciseCatalogPage />} />
               <Route path="history" element={<HistoryPage />} />
               <Route path="progress" element={<ProgressPage />} />
               <Route path="profile" element={<ProfilePage />} />

@@ -29,3 +29,4 @@ export function getExerciseName(id: string): string {
 }
 
 export * from './workingWeights';
+export * from './exerciseVideos';
