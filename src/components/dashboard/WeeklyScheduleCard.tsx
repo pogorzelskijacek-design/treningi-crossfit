@@ -1,5 +1,6 @@
 import { Users, Dumbbell, Bed, Trophy } from 'lucide-react';
-import type { DaySchedule, WeeklySchedule } from '@/domain';
+import type { DayPlan, WeeklySchedule } from '@/domain';
+import { isGeneratedPlan } from '@/domain';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { weekdayOf, todayIso } from '@/lib/date';
@@ -28,9 +29,10 @@ const DAY_ABBR: Record<keyof WeeklySchedule, string> = {
   sunday: 'Sun',
 };
 
-const SCHEDULE_META: Record<DaySchedule, { label: string; icon: typeof Users }> = {
+const SCHEDULE_META: Record<DayPlan, { label: string; icon: typeof Users }> = {
   hyrox_class: { label: 'Hyrox class', icon: Users },
-  generated: { label: 'Coached session', icon: Dumbbell },
+  generated_lower: { label: 'Lower + Olympic', icon: Dumbbell },
+  generated_upper: { label: 'Upper + Gymnastics', icon: Dumbbell },
   team_wod_optional: { label: 'Team WOD (optional)', icon: Trophy },
   rest: { label: 'Rest', icon: Bed },
 };
@@ -48,7 +50,7 @@ export function WeeklyScheduleCard({ schedule }: WeeklyScheduleCardProps) {
           const meta = SCHEDULE_META[schedule[day]];
           const Icon = meta.icon;
           const isToday = day === today;
-          const isGenerated = schedule[day] === 'generated';
+          const isGenerated = isGeneratedPlan(schedule[day]);
           return (
             <div
               key={day}

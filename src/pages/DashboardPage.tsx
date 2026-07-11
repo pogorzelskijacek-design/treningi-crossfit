@@ -54,7 +54,7 @@ export function DashboardPage() {
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <NextWorkoutCard />
+        <NextWorkoutCard schedule={profile?.weeklySchedule ?? DEFAULT_WEEKLY_SCHEDULE} />
         {profileLoading || !profile ? (
           <Skeleton className="h-80 w-full" />
         ) : (

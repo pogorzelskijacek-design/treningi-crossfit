@@ -1,5 +1,6 @@
 import { format, parseISO, getDay } from 'date-fns';
-import type { TrainingDay } from '@/domain';
+import type { TrainingDay, WeeklySchedule } from '@/domain';
+import { planFocusToken } from '@/domain';
 
 export function todayIso(): string {
   return format(new Date(), 'yyyy-MM-dd');
@@ -27,8 +28,27 @@ export function weekdayOf(iso: string): (typeof WEEKDAY_BY_INDEX)[number] {
   return WEEKDAY_BY_INDEX[getDay(parseISO(iso))];
 }
 
-/** Returns the generated-workout day (tuesday/thursday) for today, or null on other days. */
-export function currentTrainingDay(): TrainingDay | null {
-  const day = weekdayOf(todayIso());
-  return day === 'tuesday' || day === 'thursday' ? day : null;
+export type Weekday = (typeof WEEKDAY_BY_INDEX)[number];
+
+export function weekdayLabel(weekday: Weekday): string {
+  return weekday.charAt(0).toUpperCase() + weekday.slice(1);
+}
+
+/** The focus token the user's schedule assigns to today, or null if today isn't a generated day. */
+export function todaysFocusToken(schedule: WeeklySchedule): TrainingDay | null {
+  return planFocusToken(schedule[weekdayOf(todayIso())]);
+}
+
+/** Today if it's a generated day, otherwise the soonest upcoming generated day in the schedule. */
+export function nextGeneratedDay(
+  schedule: WeeklySchedule
+): { weekday: Weekday; token: TrainingDay; isToday: boolean } | null {
+  const order = WEEKDAY_BY_INDEX;
+  const todayIdx = getDay(parseISO(todayIso()));
+  for (let i = 0; i < 7; i += 1) {
+    const weekday = order[(todayIdx + i) % 7];
+    const token = planFocusToken(schedule[weekday]);
+    if (token) return { weekday, token, isToday: i === 0 };
+  }
+  return null;
 }

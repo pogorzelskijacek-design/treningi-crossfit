@@ -1,8 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { NAV_ITEMS } from './navConfig';
 import { ThemeToggle } from './ThemeToggle';
+import { AccountMenu } from './AccountMenu';
 
 function Logo() {
   return (
@@ -44,16 +46,22 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-        <div className="flex items-center justify-between border-t border-border pt-3">
-          <span className="text-xs text-muted-foreground">Theme</span>
-          <ThemeToggle />
+        <div className="space-y-2 border-t border-border pt-3">
+          {isSupabaseConfigured && <AccountMenu showEmail />}
+          <div className="flex items-center justify-between px-2">
+            <span className="text-xs text-muted-foreground">Theme</span>
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
 
       {/* Mobile top bar — pads under the status bar / notch when installed */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/80 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur md:hidden">
         <Logo />
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          {isSupabaseConfigured && <AccountMenu />}
+        </div>
       </header>
 
       <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] md:ml-60 md:pb-0">

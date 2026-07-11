@@ -15,7 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ToggleChip } from '@/components/common/ToggleChip';
 import { Skeleton } from '@/components/ui/skeleton';
-import { WeeklyScheduleCard } from '@/components/dashboard/WeeklyScheduleCard';
+import { ScheduleEditor } from '@/components/profile/ScheduleEditor';
+import { normalizeSchedule } from '@/domain';
 
 const GOAL_ENTRIES = Object.entries(GOAL_LABELS) as [Goal, string][];
 const EQUIPMENT_ENTRIES = Object.entries(EQUIPMENT_LABELS) as [Exclude<EquipmentType, 'none'>, string][];
@@ -28,7 +29,12 @@ export function ProfilePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (profile) setDraft({ ...profile, workingWeights: profile.workingWeights ?? {} });
+    if (profile)
+      setDraft({
+        ...profile,
+        workingWeights: profile.workingWeights ?? {},
+        weeklySchedule: normalizeSchedule(profile.weeklySchedule),
+      });
   }, [profile]);
 
   if (loading || !draft) {
@@ -273,7 +279,21 @@ export function ProfilePage() {
         </CardContent>
       </Card>
 
-      <WeeklyScheduleCard schedule={draft.weeklySchedule} />
+      <Card>
+        <CardHeader>
+          <CardTitle>Weekly schedule</CardTitle>
+          <CardDescription>
+            Choose which days the coach programs for you (“Coached”) and how many per week. Other days are your
+            own Hyrox/team classes or rest.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ScheduleEditor
+            value={draft.weeklySchedule}
+            onChange={(weeklySchedule) => update('weeklySchedule', weeklySchedule)}
+          />
+        </CardContent>
+      </Card>
 
       <div className="sticky bottom-16 z-10 md:bottom-4">
         <Button type="submit" size="lg" className="w-full shadow-lg" disabled={saving}>

@@ -31,8 +31,9 @@ export function summarizeLog(log: WorkoutLog): LoggedSetSummary {
   return { bestWeightKg, totalReps, totalVolumeKg, workingSets };
 }
 
+/** Short focus label for a session's focus token (workouts can fall on any weekday). */
 export function dayLabel(day: WorkoutLog['day']): string {
-  return day === 'tuesday' ? 'Tuesday' : 'Thursday';
+  return day === 'tuesday' ? 'Lower + Olympic' : 'Upper + Gymnastics';
 }
 
 export function focusForDay(day: WorkoutLog['day']): string {
