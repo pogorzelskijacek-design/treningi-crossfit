@@ -1,0 +1,15 @@
+# Netlify deploy config.
+# Static hosts serve real files first, so the SPA fallback below only applies to
+# unmatched paths — manifest.webmanifest, sw.js and the hashed assets are served
+# directly, while client-side routes (/history, /generate, …) resolve to index.html.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
