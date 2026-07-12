@@ -2,8 +2,9 @@ import { ChevronRight, Dumbbell } from 'lucide-react';
 import type { WorkoutLog } from '@/domain';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { focusesLabel } from '@/domain';
 import { formatDateShort, weekdayLabel, weekdayOf } from '@/lib/date';
-import { dayLabel, summarizeLog } from '@/lib/workoutSummary';
+import { summarizeLog } from '@/lib/workoutSummary';
 
 interface WorkoutHistoryListProps {
   history: WorkoutLog[];
@@ -27,7 +28,7 @@ export function WorkoutHistoryList({ history, onSelect }: WorkoutHistoryListProp
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{dayLabel(log.day)}</span>
+                  <span className="font-medium">{focusesLabel(log.focuses)}</span>
                   <span className="text-xs text-muted-foreground">{formatDateShort(log.date)}</span>
                 </div>
                 <p className="truncate text-xs text-muted-foreground">{weekdayLabel(weekdayOf(log.date))}</p>

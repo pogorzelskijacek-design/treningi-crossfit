@@ -5,6 +5,7 @@ import { STRONGMAN_EXERCISES, MACHINE_EXERCISES } from './exerciseLibrary.strong
 import { BODYWEIGHT_EXERCISES } from './exerciseLibrary.bodyweight';
 import { GYMNASTICS_EXERCISES } from './exerciseLibrary.gymnastics';
 import { CONDITIONING_EXERCISES, MOBILITY_EXERCISES } from './exerciseLibrary.conditioningMobility';
+import { EXTENDED_EXERCISES } from './exerciseLibrary.extended';
 
 export const EXERCISE_LIBRARY: Exercise[] = [
   ...BARBELL_EXERCISES,
@@ -16,6 +17,7 @@ export const EXERCISE_LIBRARY: Exercise[] = [
   ...GYMNASTICS_EXERCISES,
   ...CONDITIONING_EXERCISES,
   ...MOBILITY_EXERCISES,
+  ...EXTENDED_EXERCISES,
 ];
 
 const EXERCISE_BY_ID = new Map(EXERCISE_LIBRARY.map((exercise) => [exercise.id, exercise]));

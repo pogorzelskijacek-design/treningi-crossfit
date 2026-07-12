@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { GeneratedWorkout, ReadinessCheckin, TrainingDay } from '@/domain';
+import type { GeneratedWorkout, ReadinessCheckin, SessionFocus } from '@/domain';
 import { generateWorkout } from '@/coaching';
 import { newId } from '@/lib/id';
 import { todayIso } from '@/lib/date';
 import { useRepositories } from './RepositoryProvider';
 
-export type ReadinessInput = Omit<ReadinessCheckin, 'id' | 'day' | 'date'>;
+export type ReadinessInput = Omit<ReadinessCheckin, 'id' | 'focuses' | 'date'>;
 
-export function useTodayWorkout(day: TrainingDay) {
+export function useTodayWorkout(focuses: SessionFocus[]) {
   const repos = useRepositories();
+  const focusKey = focuses.join(',');
   const [generated, setGenerated] = useState<GeneratedWorkout | null>(null);
   const [restoring, setRestoring] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -19,7 +20,7 @@ export function useTodayWorkout(day: TrainingDay) {
     setRestoring(true);
     setGenerated(null);
     (async () => {
-      const recent = await repos.workouts.getRecentGeneratedByDay(day, 1);
+      const recent = await repos.workouts.getRecentGenerated(5);
       const today = recent.find((w) => w.date === todayIso());
       if (!cancelled) {
         setGenerated(today ?? null);
@@ -29,14 +30,14 @@ export function useTodayWorkout(day: TrainingDay) {
     return () => {
       cancelled = true;
     };
-  }, [day, repos]);
+  }, [focusKey, repos]);
 
   const submitCheckin = useCallback(
     async (input: ReadinessInput) => {
       setSubmitting(true);
       setError(null);
       try {
-        const checkin: ReadinessCheckin = { id: newId(), day, date: todayIso(), ...input };
+        const checkin: ReadinessCheckin = { id: newId(), focuses, date: todayIso(), ...input };
         await repos.readiness.save(checkin);
 
         const [profile, history, prHistory] = await Promise.all([
@@ -46,7 +47,7 @@ export function useTodayWorkout(day: TrainingDay) {
         ]);
         if (!profile) throw new Error('Set up your profile before generating a workout.');
 
-        const workout = generateWorkout(day, checkin, history, prHistory, profile);
+        const workout = generateWorkout(focuses, checkin, history, prHistory, profile);
         await repos.workouts.saveGeneratedWorkout(workout);
         setGenerated(workout);
         return workout;
@@ -57,7 +58,7 @@ export function useTodayWorkout(day: TrainingDay) {
         setSubmitting(false);
       }
     },
-    [day, repos]
+    [focusKey, focuses, repos]
   );
 
   return { generated, restoring, submitting, error, submitCheckin, setGenerated };

@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDateLong } from '@/lib/date';
-import { focusForDay } from '@/lib/workoutSummary';
+import { focusesLabel } from '@/domain';
 
 interface WorkoutDetailDialogProps {
   log: WorkoutLog | null;
@@ -35,7 +35,7 @@ export function WorkoutDetailDialog({ log, onClose, onDelete }: WorkoutDetailDia
           <>
             <DialogHeader>
               <div className="flex items-center gap-2">
-                <DialogTitle>{focusForDay(log.day)}</DialogTitle>
+                <DialogTitle>{focusesLabel(log.focuses)}</DialogTitle>
                 {log.overallRpe != null && <Badge variant="secondary">RPE {log.overallRpe}</Badge>}
               </div>
               <DialogDescription>{formatDateLong(log.date)}</DialogDescription>

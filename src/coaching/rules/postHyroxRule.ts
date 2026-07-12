@@ -1,4 +1,4 @@
-import type { ReadinessCheckin, TrainingDay } from '@/domain';
+import type { ReadinessCheckin, SessionFocus } from '@/domain';
 import type { RuleTrace } from '../types';
 
 export interface PostHyroxResult {
@@ -7,12 +7,13 @@ export interface PostHyroxResult {
 }
 
 /**
- * Tuesday always follows Monday's coach-led Hyrox class. If the athlete
- * confirms they completed it, cap heavy lower-body WOD loading today so
- * Hyrox fatigue doesn't compound with fresh squat/hinge/carry volume.
+ * On a lower-body-focused day that follows a completed Hyrox/leg session, cap
+ * heavy lower-body WOD loading so that fatigue doesn't compound with fresh
+ * squat/hinge/carry volume.
  */
-export function postHyroxRule(day: TrainingDay, checkin: ReadinessCheckin): PostHyroxResult {
-  if (day !== 'tuesday' || !checkin.previousWorkoutCompleted) {
+export function postHyroxRule(focuses: SessionFocus[], checkin: ReadinessCheckin): PostHyroxResult {
+  const lowerFocus = focuses.includes('lower') || focuses.includes('strongman');
+  if (!lowerFocus || !checkin.previousWorkoutCompleted) {
     return { capLowerBodyWodLoad: false, traces: [] };
   }
 

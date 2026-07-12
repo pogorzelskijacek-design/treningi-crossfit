@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, CalendarClock } from 'lucide-react';
 import type { WeeklySchedule } from '@/domain';
+import { focusesLabel } from '@/domain';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { nextGeneratedDay, weekdayLabel } from '@/lib/date';
-import { focusForDay } from '@/lib/workoutSummary';
 
 export function NextWorkoutCard({ schedule }: { schedule: WeeklySchedule }) {
   const next = nextGeneratedDay(schedule);
@@ -31,7 +31,7 @@ export function NextWorkoutCard({ schedule }: { schedule: WeeklySchedule }) {
     );
   }
 
-  const { token, isToday, weekday } = next;
+  const { focuses, isToday, weekday } = next;
 
   return (
     <Card>
@@ -40,7 +40,7 @@ export function NextWorkoutCard({ schedule }: { schedule: WeeklySchedule }) {
           <CardTitle>Next workout</CardTitle>
           <Badge variant={isToday ? 'default' : 'secondary'}>{isToday ? 'Today' : weekdayLabel(weekday)}</Badge>
         </div>
-        <CardDescription>{focusForDay(token)}</CardDescription>
+        <CardDescription>{focusesLabel(focuses)}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-3 py-2.5 text-sm text-muted-foreground">

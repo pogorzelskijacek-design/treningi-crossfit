@@ -1,5 +1,5 @@
 import type { WorkoutSectionType } from './exercise';
-import type { TrainingDay, WodFormat } from './trainingDay';
+import type { SessionFocus, WodFormat } from './trainingDay';
 import type { LoadAdjustment } from './workout';
 
 export interface LoggedSet {
@@ -23,7 +23,7 @@ export interface LoggedExercise {
 export interface WorkoutLog {
   id: string;
   generatedWorkoutId: string;
-  day: TrainingDay;
+  focuses: SessionFocus[];
   date: string;
   loggedExercises: LoggedExercise[];
   wodFormat?: WodFormat;

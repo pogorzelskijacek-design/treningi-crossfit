@@ -6,7 +6,7 @@ import { buildDraftLog } from './workoutLogDraft';
 
 describe('buildDraftLog', () => {
   it('pre-fills every set as completed with the prescribed reps and weight', () => {
-    const workout = generateWorkout('tuesday', makeCheckin('tuesday'), [], [], makeProfile(), EXERCISE_LIBRARY);
+    const workout = generateWorkout(['lower', 'olympic'], makeCheckin(['lower', 'olympic']), [], [], makeProfile(), EXERCISE_LIBRARY);
     const draft = buildDraftLog(workout);
 
     expect(draft.loggedExercises.length).toBeGreaterThan(0);
@@ -19,7 +19,7 @@ describe('buildDraftLog', () => {
   });
 
   it('carries the strength lift prescribed weight onto the draft sets', () => {
-    const workout = generateWorkout('tuesday', makeCheckin('tuesday'), [], [], makeProfile(), EXERCISE_LIBRARY);
+    const workout = generateWorkout(['lower', 'olympic'], makeCheckin(['lower', 'olympic']), [], [], makeProfile(), EXERCISE_LIBRARY);
     const strengthItem = workout.sections.strength.items[0];
     const draft = buildDraftLog(workout);
     const draftStrength = draft.loggedExercises.find((e) => e.exerciseId === strengthItem.exerciseId);

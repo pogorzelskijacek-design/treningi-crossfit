@@ -1,5 +1,5 @@
 import type { WorkoutSectionType } from './exercise';
-import type { OlympicLiftProgression, TrainingDay, WodFormat } from './trainingDay';
+import type { OlympicLiftProgression, SessionFocus, WodFormat } from './trainingDay';
 
 export interface WorkoutSectionItem {
   exerciseId: string;
@@ -32,7 +32,7 @@ export interface LoadAdjustment {
 
 export interface GeneratedWorkout {
   id: string;
-  day: TrainingDay;
+  focuses: SessionFocus[];
   date: string;
   focus: string;
   olympicLiftProgression?: OlympicLiftProgression;

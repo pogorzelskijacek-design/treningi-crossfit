@@ -6,7 +6,7 @@ function log(date: string, overrides: Partial<WorkoutLog> = {}): WorkoutLog {
   return {
     id: date,
     generatedWorkoutId: 'g',
-    day: 'tuesday',
+    focuses: ['lower', 'olympic'],
     date,
     completed: true,
     loggedExercises: [

@@ -1,12 +1,15 @@
 import type {
   OlympicLiftProgression,
   ReadinessCheckin,
-  TrainingDay,
+  SessionFocus,
   UserProfile,
   WodFormat,
   WorkoutLog,
 } from '@/domain';
 import { DEFAULT_PROFILE } from '@/domain';
+
+export const LOWER_OLYMPIC: SessionFocus[] = ['lower', 'olympic'];
+export const UPPER_GYM: SessionFocus[] = ['upper', 'gymnastics'];
 
 let counter = 0;
 function nextId(prefix: string): string {
@@ -15,7 +18,7 @@ function nextId(prefix: string): string {
 }
 
 export function makeCompletedLog(
-  day: TrainingDay,
+  focuses: SessionFocus[],
   date: string,
   options: {
     olympicLiftProgression?: OlympicLiftProgression;
@@ -26,7 +29,7 @@ export function makeCompletedLog(
   return {
     id: nextId('log'),
     generatedWorkoutId: nextId('gen'),
-    day,
+    focuses,
     date,
     completed: true,
     wodFormat: options.wodFormat,
@@ -45,11 +48,11 @@ export function makeCompletedLog(
   };
 }
 
-export function makeCheckin(day: TrainingDay, overrides: Partial<ReadinessCheckin> = {}): ReadinessCheckin {
+export function makeCheckin(focuses: SessionFocus[], overrides: Partial<ReadinessCheckin> = {}): ReadinessCheckin {
   return {
     id: nextId('checkin'),
     date: '2026-07-14',
-    day,
+    focuses,
     energy: 7,
     recovery: 7,
     sleepHours: 7.5,

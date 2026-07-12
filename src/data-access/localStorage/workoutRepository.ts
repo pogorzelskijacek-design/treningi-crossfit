@@ -1,13 +1,14 @@
-import type { GeneratedWorkout, TrainingDay, WorkoutLog } from '@/domain';
+import type { GeneratedWorkout, WorkoutLog } from '@/domain';
+import { normalizeGeneratedWorkout, normalizeWorkoutLog } from '@/domain';
 import type { WorkoutRepository } from '../types';
 import { STORAGE_KEYS, getJSON, setJSON } from './localStorageClient';
 
 function readLogs(): WorkoutLog[] {
-  return getJSON<WorkoutLog[]>(STORAGE_KEYS.workouts, []);
+  return getJSON<WorkoutLog[]>(STORAGE_KEYS.workouts, []).map(normalizeWorkoutLog);
 }
 
 function readGenerated(): GeneratedWorkout[] {
-  return getJSON<GeneratedWorkout[]>(STORAGE_KEYS.generatedWorkouts, []);
+  return getJSON<GeneratedWorkout[]>(STORAGE_KEYS.generatedWorkouts, []).map(normalizeGeneratedWorkout);
 }
 
 function sortByDateDesc<T extends { date: string }>(items: T[]): T[] {
@@ -21,10 +22,6 @@ export const localWorkoutRepository: WorkoutRepository = {
 
   async getById(id) {
     return readLogs().find((log) => log.id === id) ?? null;
-  },
-
-  async getRecentByDay(day, limit) {
-    return sortByDateDesc(readLogs().filter((log) => log.day === day)).slice(0, limit);
   },
 
   async save(log) {
@@ -60,7 +57,7 @@ export const localWorkoutRepository: WorkoutRepository = {
     return readGenerated().find((w) => w.id === id) ?? null;
   },
 
-  async getRecentGeneratedByDay(day: TrainingDay, limit: number) {
-    return sortByDateDesc(readGenerated().filter((w) => w.day === day)).slice(0, limit);
+  async getRecentGenerated(limit: number) {
+    return sortByDateDesc(readGenerated()).slice(0, limit);
   },
 };

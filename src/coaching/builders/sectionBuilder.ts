@@ -3,18 +3,19 @@ import type {
   ExerciseCategory,
   MovementPattern,
   OlympicLiftProgression,
-  TrainingDay,
+  SessionFocus,
   UserProfile,
   WodFormat,
   WorkoutLog,
   WorkoutSection,
+  WorkoutSectionItem,
 } from '@/domain';
 import { OLYMPIC_LIFT_LABELS } from '@/domain';
-import type { WorkoutSectionItem } from '@/domain';
 import { resolveOlympicWorkingWeight } from '@/data';
 import type { SorenessExclusions, VolumeIntensityAdjustment } from '../types';
 import type { PostHyroxResult } from '../rules/postHyroxRule';
 import type { LiftProgressionSuggestion } from '../rules/liftProgression';
+import type { FocusHints } from '../focusHints';
 import { filterExercises, pickExercisesForSection } from '../selectors/exerciseSelectors';
 import {
   parseTargetReps,
@@ -27,17 +28,24 @@ import {
 } from './prescriptionHelpers';
 import { SECTION_MINUTES } from '../constants';
 
+function uniq<T>(items: T[]): T[] {
+  return [...new Set(items)];
+}
+
 function preferPatterns(candidates: Exercise[], patterns: MovementPattern[], minCount = 3): Exercise[] {
+  if (patterns.length === 0) return candidates;
   const biased = candidates.filter((c) => c.movementPattern.some((p) => patterns.includes(p)));
   return biased.length >= minCount ? biased : candidates;
 }
 
 export interface SectionBuilderInput {
-  day: TrainingDay;
+  focuses: SessionFocus[];
+  hints: FocusHints;
   exerciseLibrary: Exercise[];
   profile: UserProfile;
-  recentSessionsThisDay: WorkoutLog[];
-  /** Full log history (all days), used to progress load off proven results. */
+  /** Recent completed sessions sharing a focus — for rotation & movement-pattern de-duplication. */
+  recentSessions: WorkoutLog[];
+  /** Full log history (all sessions), used to progress load off proven results. */
   history: WorkoutLog[];
   adjustment: VolumeIntensityAdjustment;
   soreness: SorenessExclusions;
@@ -47,11 +55,19 @@ export interface SectionBuilderInput {
   wodFormat: WodFormat;
 }
 
-/**
- * Builds a section item, attaching a concrete prescribed weight when the
- * exercise is loaded (barbell/dumbbell/kettlebell with a known working weight).
- * Bodyweight/machine items fall back to a qualitative load note.
- */
+function skillMinutes(hints: FocusHints): number {
+  if (hints.skill === 'olympic') return SECTION_MINUTES.skillOlympic;
+  if (hints.skill === 'gymnastics') return SECTION_MINUTES.skillGymnastics;
+  return 0;
+}
+
+function strengthMinutes(hints: FocusHints): number {
+  if (hints.skill === 'olympic') return SECTION_MINUTES.strengthWithOlympic;
+  if (hints.skill === 'gymnastics') return SECTION_MINUTES.strengthDefault;
+  return SECTION_MINUTES.strengthNoSkill;
+}
+
+/** Builds a section item, attaching a concrete prescribed weight for loaded lifts. */
 function loadedItem(
   exercise: Exercise,
   prescription: string,
@@ -71,17 +87,6 @@ function loadedItem(
   }
   return item;
 }
-
-const LOWER_BODY_PATTERNS: MovementPattern[] = ['squat', 'hinge', 'lunge', 'jump', 'carry'];
-const UPPER_BODY_PATTERNS: MovementPattern[] = [
-  'push_horizontal',
-  'push_vertical',
-  'pull_horizontal',
-  'pull_vertical',
-  'gymnastics_pull',
-  'gymnastics_push',
-];
-const CORE_PATTERNS: MovementPattern[] = ['core_flexion', 'core_rotation', 'core_anti_extension'];
 
 export function buildSections(input: SectionBuilderInput): {
   warmup: WorkoutSection;
@@ -110,14 +115,11 @@ function baseFilterOptions(input: SectionBuilderInput) {
 }
 
 function buildWarmup(input: SectionBuilderInput): WorkoutSection {
-  const { day, exerciseLibrary, recentSessionsThisDay } = input;
-  const candidates = filterExercises(exerciseLibrary, {
-    section: 'warmup',
-    ...baseFilterOptions(input),
-  });
-  const biasPatterns = day === 'tuesday' ? LOWER_BODY_PATTERNS : UPPER_BODY_PATTERNS;
-  const pool = preferPatterns(candidates, biasPatterns);
-  const picks = pickExercisesForSection(pool, 'warmup', recentSessionsThisDay, exerciseLibrary, 4);
+  const { hints, exerciseLibrary, recentSessions } = input;
+  const candidates = filterExercises(exerciseLibrary, { section: 'warmup', ...baseFilterOptions(input) });
+  const bias = uniq([...hints.strengthPatterns, ...hints.wodPatterns]);
+  const pool = preferPatterns(candidates, bias, 4);
+  const picks = pickExercisesForSection(pool, 'warmup', recentSessions, exerciseLibrary, 4);
 
   return {
     type: 'warmup',
@@ -128,10 +130,10 @@ function buildWarmup(input: SectionBuilderInput): WorkoutSection {
 }
 
 function buildSkill(input: SectionBuilderInput): WorkoutSection {
-  const { day, exerciseLibrary, recentSessionsThisDay, adjustment, olympicLiftProgression, liftProgressionSuggestion } =
+  const { hints, exerciseLibrary, recentSessions, adjustment, olympicLiftProgression, liftProgressionSuggestion } =
     input;
 
-  if (day === 'tuesday' && olympicLiftProgression) {
+  if (hints.skill === 'olympic' && olympicLiftProgression) {
     const sets = scaleSets(6, adjustment.volumeMultiplier, 3);
     const label = OLYMPIC_LIFT_LABELS[olympicLiftProgression];
     const baseWeight = resolveOlympicWorkingWeight(olympicLiftProgression, input.profile);
@@ -155,84 +157,101 @@ function buildSkill(input: SectionBuilderInput): WorkoutSection {
           notes: 'Focus: bar path, timing, receiving position — not maximum weight.',
         },
       ],
-      timeCapMinutes: SECTION_MINUTES.skill.tuesday,
+      timeCapMinutes: skillMinutes(hints),
     };
   }
 
-  const candidates = filterExercises(exerciseLibrary, {
-    section: 'skill',
-    categories: ['gymnastics'],
-    ...baseFilterOptions(input),
-  });
-  const picks = pickExercisesForSection(candidates, 'skill', recentSessionsThisDay, exerciseLibrary, 1);
+  if (hints.skill === 'gymnastics') {
+    const candidates = filterExercises(exerciseLibrary, {
+      section: 'skill',
+      categories: ['gymnastics'],
+      ...baseFilterOptions(input),
+    });
+    const picks = pickExercisesForSection(candidates, 'skill', recentSessions, exerciseLibrary, 1);
+    return {
+      type: 'skill',
+      title: 'Skill — Gymnastics',
+      items: picks.map((ex) =>
+        toSectionItem(ex, '4-5 sets, technical focus over fatigue', {
+          notes: ex.skillOnly ? 'Optional practice — only as much as feels clean and controlled.' : undefined,
+        })
+      ),
+      timeCapMinutes: skillMinutes(hints),
+    };
+  }
 
-  return {
-    type: 'skill',
-    title: 'Skill — Gymnastics',
-    items: picks.map((ex) =>
-      toSectionItem(ex, '4-5 sets, technical focus over fatigue', {
-        notes: ex.skillOnly ? 'Optional practice — only as much as feels clean and controlled.' : undefined,
-      })
-    ),
-    timeCapMinutes: SECTION_MINUTES.skill.thursday,
-  };
+  // No dedicated skill focus today — the time folds into strength/WOD.
+  return { type: 'skill', title: 'Skill', items: [], timeCapMinutes: 0 };
 }
 
+const LOWER_STRENGTH: MovementPattern[] = ['squat', 'hinge', 'lunge'];
+const UPPER_STRENGTH: MovementPattern[] = ['push_horizontal', 'push_vertical', 'pull_horizontal', 'pull_vertical'];
+
 function buildStrength(input: SectionBuilderInput): WorkoutSection {
-  const { day, exerciseLibrary, recentSessionsThisDay, adjustment } = input;
+  const { hints, exerciseLibrary, recentSessions, adjustment } = input;
+  const categories: ExerciseCategory[] = uniq([
+    'barbell',
+    'dumbbell',
+    ...(hints.strengthCategories ?? []),
+    ...(hints.skill === 'olympic' ? (['olympic_lifting'] as ExerciseCategory[]) : []),
+  ]);
+
+  // When a day is clearly upper- or lower-only, exclude the opposite group so an
+  // upper day never gets a squat-pattern lift (e.g. a thruster) and vice versa.
+  const wantsLower = hints.strengthPatterns.some((p) => LOWER_STRENGTH.includes(p));
+  const wantsUpper = hints.strengthPatterns.some((p) => UPPER_STRENGTH.includes(p));
+  const opposingPatterns = wantsUpper && !wantsLower ? LOWER_STRENGTH : wantsLower && !wantsUpper ? UPPER_STRENGTH : [];
   const base = baseFilterOptions(input);
-  // Hard exclusion here (not just a soft preference): the spec is explicit that
-  // Tuesday's Strength block is lower body and Thursday's is upper body, so a
-  // squat-pattern lift like Thruster must never fill Thursday's Strength slot.
-  const opposingPatterns = day === 'tuesday' ? UPPER_BODY_PATTERNS : LOWER_BODY_PATTERNS;
 
   const candidates = filterExercises(exerciseLibrary, {
     section: 'strength',
-    categories: day === 'tuesday' ? ['barbell', 'olympic_lifting'] : ['barbell', 'dumbbell'],
+    categories,
     ...base,
     excludedPatterns: [...base.excludedPatterns, ...opposingPatterns],
   });
-  const picks = pickExercisesForSection(candidates, 'strength', recentSessionsThisDay, exerciseLibrary, 1);
+  // Hard-bias to the focus's strength patterns so a Lower day gets a lower lift, etc.
+  const inFocus = candidates.filter((ex) => ex.movementPattern.some((p) => hints.strengthPatterns.includes(p)));
+  const pool = inFocus.length >= 1 ? inFocus : candidates;
+  const picks = pickExercisesForSection(pool, 'strength', recentSessions, exerciseLibrary, 1);
 
   const sets = scaleSets(5, adjustment.volumeMultiplier, 3);
-
   return {
     type: 'strength',
     title: 'Strength',
-    timeCapMinutes: SECTION_MINUTES.strength[day],
+    timeCapMinutes: strengthMinutes(hints),
     items: picks.map((ex) => loadedItem(ex, `${sets} sets x 5 reps`, { sets, reps: '5' }, input)),
   };
 }
 
-function buildWod(input: SectionBuilderInput): WorkoutSection {
-  const { day, exerciseLibrary, recentSessionsThisDay, adjustment, postHyrox, wodFormat } = input;
+const WOD_CONDITIONING_CATEGORIES: ExerciseCategory[] = [
+  'bodyweight',
+  'gymnastics',
+  'machine',
+  'dumbbell',
+  'kettlebell',
+  'conditioning',
+];
 
-  const lowerBodyFriendlyCategories: ExerciseCategory[] = [
-    'bodyweight',
-    'gymnastics',
-    'machine',
-    'dumbbell',
-    'kettlebell',
-  ];
+function buildWod(input: SectionBuilderInput): WorkoutSection {
+  const { hints, exerciseLibrary, recentSessions, adjustment, postHyrox, wodFormat } = input;
+
   const candidates = filterExercises(exerciseLibrary, {
     section: 'wod',
-    categories: postHyrox.capLowerBodyWodLoad ? lowerBodyFriendlyCategories : undefined,
+    categories: postHyrox.capLowerBodyWodLoad ? WOD_CONDITIONING_CATEGORIES : undefined,
     ...baseFilterOptions(input),
   });
 
-  // A WOD is full-body conditioning, so this is a soft bias (not a hard filter):
-  // lean toward the day's focus plus always-appropriate conditioning/core work,
-  // rather than banning the opposing focus outright (a few box jumps in a
-  // Thursday WOD is fine — three heavy barbell squats are not).
-  const wodBiasPatterns: MovementPattern[] =
-    day === 'tuesday'
-      ? [...LOWER_BODY_PATTERNS, ...CORE_PATTERNS, 'locomotion']
-      : [...UPPER_BODY_PATTERNS, 'locomotion', 'core_flexion'];
-  const pool = preferPatterns(candidates, wodBiasPatterns, 4);
+  // Soft bias toward the union of the day's WOD patterns (plus always-appropriate conditioning).
+  const bias = uniq([...hints.wodPatterns, ...(['locomotion', 'core_flexion'] as MovementPattern[])]);
+  const pool = preferPatterns(candidates, bias, 4);
 
   const movementCount = wodFormat === 'Tabata' || wodFormat === 'DeathBy' ? 2 : 3;
-  const picks = pickExercisesForSection(pool, 'wod', recentSessionsThisDay, exerciseLibrary, movementCount);
-  const timeCapMinutes = scaleMinutes(wodBaseMinutes(wodFormat), adjustment.volumeMultiplier);
+  const picks = pickExercisesForSection(pool, 'wod', recentSessions, exerciseLibrary, movementCount);
+
+  let base = wodBaseMinutes(wodFormat);
+  if (hints.wodStyle === 'sprint') base = Math.max(6, base - 3);
+  if (hints.wodStyle === 'long') base += 6;
+  const timeCapMinutes = scaleMinutes(base, adjustment.volumeMultiplier);
 
   return {
     type: 'wod',
@@ -256,15 +275,10 @@ function wodRepsFor(exercise: Exercise): string | undefined {
 }
 
 function buildAccessories(input: SectionBuilderInput): WorkoutSection {
-  const { day, exerciseLibrary, recentSessionsThisDay, adjustment } = input;
-  const patterns = day === 'tuesday' ? [...CORE_PATTERNS, 'hinge' as MovementPattern] : UPPER_BODY_PATTERNS;
-
-  const candidates = filterExercises(exerciseLibrary, {
-    section: 'accessories',
-    ...baseFilterOptions(input),
-  });
-  const pool = preferPatterns(candidates, patterns);
-  const picks = pickExercisesForSection(pool, 'accessories', recentSessionsThisDay, exerciseLibrary, 2);
+  const { hints, exerciseLibrary, recentSessions, adjustment } = input;
+  const candidates = filterExercises(exerciseLibrary, { section: 'accessories', ...baseFilterOptions(input) });
+  const pool = preferPatterns(candidates, hints.accessoryPatterns);
+  const picks = pickExercisesForSection(pool, 'accessories', recentSessions, exerciseLibrary, 2);
   const sets = scaleSets(3, adjustment.volumeMultiplier, 2);
 
   return {
@@ -276,12 +290,9 @@ function buildAccessories(input: SectionBuilderInput): WorkoutSection {
 }
 
 function buildCooldown(input: SectionBuilderInput): WorkoutSection {
-  const { exerciseLibrary, recentSessionsThisDay } = input;
-  const candidates = filterExercises(exerciseLibrary, {
-    section: 'cooldown',
-    ...baseFilterOptions(input),
-  });
-  const picks = pickExercisesForSection(candidates, 'cooldown', recentSessionsThisDay, exerciseLibrary, 3);
+  const { exerciseLibrary, recentSessions } = input;
+  const candidates = filterExercises(exerciseLibrary, { section: 'cooldown', ...baseFilterOptions(input) });
+  const picks = pickExercisesForSection(candidates, 'cooldown', recentSessions, exerciseLibrary, 3);
 
   return {
     type: 'cooldown',

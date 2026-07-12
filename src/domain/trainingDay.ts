@@ -1,4 +1,67 @@
+/** Legacy two-template token, kept only for migrating old stored records. */
 export type TrainingDay = 'tuesday' | 'thursday';
+
+/** A granular training focus. A generated day carries one or more of these. */
+export type SessionFocus =
+  | 'olympic'
+  | 'lower'
+  | 'upper'
+  | 'gymnastics'
+  | 'conditioning'
+  | 'endurance'
+  | 'core'
+  | 'strongman';
+
+export const SESSION_FOCUS_ORDER: SessionFocus[] = [
+  'olympic',
+  'lower',
+  'upper',
+  'gymnastics',
+  'conditioning',
+  'endurance',
+  'core',
+  'strongman',
+];
+
+export const SESSION_FOCUS_LABELS: Record<SessionFocus, string> = {
+  olympic: 'Olympic Lifting',
+  lower: 'Lower Body',
+  upper: 'Upper Body',
+  gymnastics: 'Gymnastics',
+  conditioning: 'Conditioning',
+  endurance: 'Endurance',
+  core: 'Core & Midline',
+  strongman: 'Strongman',
+};
+
+export const SESSION_FOCUS_SHORT: Record<SessionFocus, string> = {
+  olympic: 'Olympic',
+  lower: 'Lower',
+  upper: 'Upper',
+  gymnastics: 'Gymnastics',
+  conditioning: 'Conditioning',
+  endurance: 'Endurance',
+  core: 'Core',
+  strongman: 'Strongman',
+};
+
+/** Compact human label for a set of focuses, e.g. "Olympic + Gymnastics + Core". */
+export function focusesLabel(focuses: SessionFocus[] | undefined): string {
+  if (!focuses || focuses.length === 0) return 'Full Session';
+  return SESSION_FOCUS_ORDER.filter((f) => focuses.includes(f))
+    .map((f) => SESSION_FOCUS_SHORT[f])
+    .join(' + ');
+}
+
+/** Stable string signature for a focus set (used for the indexed `day` column). */
+export function focusesSignature(focuses: SessionFocus[]): string {
+  return [...focuses].sort().join('+') || 'none';
+}
+
+/** Derives focuses from a legacy `day` token so old records keep working. */
+export function focusesFromLegacyDay(day: TrainingDay | undefined): SessionFocus[] {
+  return day === 'thursday' ? ['upper', 'gymnastics'] : ['lower', 'olympic'];
+}
 
 export type WodFormat =
   | 'AMRAP'

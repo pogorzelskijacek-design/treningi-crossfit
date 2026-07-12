@@ -1,14 +1,26 @@
-import type { TrainingDay, WorkoutLog } from '@/domain';
+import type { SessionFocus, WorkoutLog } from '@/domain';
 import { LOOKBACK_SESSIONS } from '../constants';
 
-/** Most-recent-first sessions matching the given weekday, capped at `limit`. */
-export function getRecentSessionsByDay(
+/** Most-recent-first completed sessions whose focuses include `focus`. */
+export function getRecentSessionsByFocus(
   history: WorkoutLog[],
-  day: TrainingDay,
+  focus: SessionFocus,
   limit: number = LOOKBACK_SESSIONS
 ): WorkoutLog[] {
   return [...history]
-    .filter((log) => log.day === day && log.completed)
+    .filter((log) => log.completed && log.focuses?.includes(focus))
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, limit);
+}
+
+/** Most-recent-first completed sessions sharing at least one focus with `focuses`. */
+export function getRecentSessionsSharingFocus(
+  history: WorkoutLog[],
+  focuses: SessionFocus[],
+  limit: number = LOOKBACK_SESSIONS
+): WorkoutLog[] {
+  return [...history]
+    .filter((log) => log.completed && log.focuses?.some((f) => focuses.includes(f)))
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, limit);
 }

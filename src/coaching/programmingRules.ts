@@ -3,14 +3,16 @@ import type {
   GeneratedWorkout,
   PersonalRecord,
   ReadinessCheckin,
-  TrainingDay,
+  SessionFocus,
   UserProfile,
   WorkoutLog,
 } from '@/domain';
+import { focusesLabel } from '@/domain';
 import { EXERCISE_LIBRARY } from '@/data';
 import { newId } from '@/lib/id';
 import { LOOKBACK_SESSIONS } from './constants';
-import { getRecentSessionsByDay } from './selectors/historyLookback';
+import { getRecentSessionsByFocus, getRecentSessionsSharingFocus } from './selectors/historyLookback';
+import { combineFocusHints } from './focusHints';
 import { fatigueAdjustment } from './rules/fatigueAdjustment';
 import { applyWeeklyLoadBalance } from './rules/weeklyLoadBalance';
 import { sorenessRules } from './rules/sorenessRules';
@@ -29,16 +31,11 @@ export interface GenerateWorkoutOptions {
 
 /**
  * The coaching engine's single entry point. Pure and deterministic: identical
- * inputs always produce an identical workout, so it's easy to test and easy
- * to later swap for an LLM-based recommender behind the same signature.
- *
- * PersonalRecord history is accepted for forward-compatibility (e.g. gating
- * strength prescriptions off a percentage of 1RM) but isn't used by any rule
- * yet — the MVP's strength/load decisions come entirely from readiness and
- * recent session history.
+ * inputs always produce an identical workout. Takes the day's `focuses` and
+ * shapes the six sections from them (see focusHints.ts).
  */
 export function generateWorkout(
-  day: TrainingDay,
+  focuses: SessionFocus[],
   checkin: ReadinessCheckin,
   history: WorkoutLog[],
   _prHistory: PersonalRecord[],
@@ -48,29 +45,35 @@ export function generateWorkout(
 ): GeneratedWorkout {
   const idFactory = options.idFactory ?? newId;
   const date = checkin.date;
+  const activeFocuses: SessionFocus[] = focuses.length > 0 ? focuses : ['lower', 'olympic'];
 
-  const recentSessionsThisDay = getRecentSessionsByDay(history, day, LOOKBACK_SESSIONS);
+  const hints = combineFocusHints(activeFocuses);
+  const recentSessions = getRecentSessionsSharingFocus(history, activeFocuses, LOOKBACK_SESSIONS);
 
   let adjustment = fatigueAdjustment(checkin);
   adjustment = applyWeeklyLoadBalance(adjustment, date, history);
 
   const soreness = sorenessRules(checkin, profile);
-  const postHyrox = postHyroxRule(day, checkin);
+  const postHyrox = postHyroxRule(activeFocuses, checkin);
 
   const traces: RuleTrace[] = [...adjustment.traces, ...soreness.traces, ...postHyrox.traces];
 
-  const wodFormat = pickNextWodFormat(recentSessionsThisDay);
-  const olympicLiftProgression = day === 'tuesday' ? pickNextOlympicLift(recentSessionsThisDay) : undefined;
+  const wodFormat = pickNextWodFormat(recentSessions);
+  const olympicLiftProgression =
+    hints.skill === 'olympic'
+      ? pickNextOlympicLift(getRecentSessionsByFocus(history, 'olympic', LOOKBACK_SESSIONS))
+      : undefined;
   const liftProgressionSuggestion = olympicLiftProgression
     ? suggestLiftProgression(olympicLiftProgression, history)
     : undefined;
   if (liftProgressionSuggestion?.trace) traces.push(liftProgressionSuggestion.trace);
 
   const sections = buildSections({
-    day,
+    focuses: activeFocuses,
+    hints,
     exerciseLibrary,
     profile,
-    recentSessionsThisDay,
+    recentSessions,
     history,
     adjustment,
     soreness,
@@ -80,7 +83,7 @@ export function generateWorkout(
     wodFormat,
   });
 
-  const rationale = buildRationale(day, traces, wodFormat, olympicLiftProgression);
+  const rationale = buildRationale(activeFocuses, traces, wodFormat, olympicLiftProgression);
 
   const estimatedDurationMinutes = Object.values(sections).reduce(
     (total, section) => total + (section.timeCapMinutes ?? 0),
@@ -89,9 +92,9 @@ export function generateWorkout(
 
   return {
     id: idFactory(),
-    day,
+    focuses: activeFocuses,
     date,
-    focus: day === 'tuesday' ? 'Lower Body + Core + Olympic Lifting' : 'Upper Body + Gymnastics',
+    focus: focusesLabel(activeFocuses),
     olympicLiftProgression,
     sections,
     rationale,

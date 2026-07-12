@@ -6,7 +6,7 @@ function logWith(exerciseId: string, weightKg: number, opts: { rpe?: number; tec
   return {
     id: 'l',
     generatedWorkoutId: 'g',
-    day: 'tuesday',
+    focuses: ['lower', 'olympic'],
     date: '2026-07-07',
     completed: true,
     loggedExercises: [

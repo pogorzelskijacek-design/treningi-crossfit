@@ -45,13 +45,11 @@ export function GeneratedWorkoutView({ workout, onLogWorkout }: GeneratedWorkout
         </CardContent>
       </Card>
 
-      {Object.values(workout.sections).map((section) => (
-        <SectionCard
-          key={section.type}
-          section={section}
-          onPlay={(id, name) => setActive({ id, name })}
-        />
-      ))}
+      {Object.values(workout.sections)
+        .filter((section) => section.items.length > 0)
+        .map((section) => (
+          <SectionCard key={section.type} section={section} onPlay={(id, name) => setActive({ id, name })} />
+        ))}
 
       {onLogWorkout && (
         <Button onClick={onLogWorkout} size="lg" className="w-full">

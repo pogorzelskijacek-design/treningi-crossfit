@@ -1,4 +1,5 @@
 import type { WorkoutLog } from '@/domain';
+import { focusesLabel } from '@/domain';
 
 export interface LoggedSetSummary {
   bestWeightKg?: number;
@@ -31,11 +32,7 @@ export function summarizeLog(log: WorkoutLog): LoggedSetSummary {
   return { bestWeightKg, totalReps, totalVolumeKg, workingSets };
 }
 
-/** Short focus label for a session's focus token (workouts can fall on any weekday). */
-export function dayLabel(day: WorkoutLog['day']): string {
-  return day === 'tuesday' ? 'Lower + Olympic' : 'Upper + Gymnastics';
-}
-
-export function focusForDay(day: WorkoutLog['day']): string {
-  return day === 'tuesday' ? 'Lower Body + Olympic Lifting' : 'Upper Body + Gymnastics';
+/** Human label for a logged session's focus set, e.g. "Lower + Olympic". */
+export function sessionLabel(log: WorkoutLog): string {
+  return focusesLabel(log.focuses);
 }

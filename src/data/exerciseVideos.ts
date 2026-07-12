@@ -54,6 +54,32 @@ export const EXERCISE_VIDEO_IDS: Record<string, string> = {
   'l-sit': 'WHi1bvZLwlw',
   // Machine
   'row-erg': 'fxfhQMbATCw', // "Rowing Technique Tips"
+  // Extended movements — matched to official CrossFit demos
+  'power-snatch': 'TL8SMp7RdXQ',
+  'hang-power-snatch': '-mLzQdVAwlw',
+  'clean-and-jerk': 'PjY1rH4_MOA',
+  'power-clean-and-jerk': 'Sk1vhXhHO_A',
+  'sots-press': 'eJ9MLnNV6FY',
+  'zercher-squat': 'nwx6Ip7hd3I',
+  'wall-walk': 'NK_OcHEm8yM',
+  'strict-handstand-push-up': '0wDEO6shVjc',
+  'deficit-handstand-push-up': 'DJA1t6Fp5WE',
+  'ring-muscle-up': 'vJTJFc2wmk4',
+  'toes-to-rings': '1zp-B1Vb_Vs',
+  'strict-toes-to-bar': 'xX9Hzi7Onnw',
+  'kipping-pull-up': '2mAoQUCM_18',
+  'butterfly-pull-up': '2mAoQUCM_18',
+  'freestanding-handstand-hold': '_-9_46by2JI',
+  'wall-handstand-hold': '_-9_46by2JI',
+  'ghd-back-extension': 'ivDB23Kcv-A',
+  'ghd-hip-extension': 'QdCzafAXJhY',
+  'medicine-ball-clean': 'KVGhkHSrDJo',
+  'slam-ball': 'k9W6g9LvXDI',
+  'dumbbell-push-jerk': 'rnN3pYswScE',
+  'dumbbell-power-clean': 'viWI2rEt-HU',
+  'dumbbell-hang-clean': '8r44xv_Aqbw',
+  'dumbbell-overhead-squat': 'azumEfnk-GI',
+  'dumbbell-step-up': '5qjqDHOUh-A',
   // Olympic-lift progression keys (Tuesday skill block) — mapped to the closest
   // official clean / front-squat / deadlift demo so every rotation has a video.
   HighHangPowerClean: '0aP3tgKZcHQ', // The Hang Power Clean

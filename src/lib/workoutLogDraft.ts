@@ -42,7 +42,7 @@ export function buildDraftLog(workout: GeneratedWorkout): WorkoutLog {
   return {
     id: newId(),
     generatedWorkoutId: workout.id,
-    day: workout.day,
+    focuses: workout.focuses,
     date: workout.date,
     loggedExercises,
     wodFormat: workout.sections.wod.wodFormat,

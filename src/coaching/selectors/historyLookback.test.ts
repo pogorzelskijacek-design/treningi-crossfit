@@ -1,37 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import { getRecentSessionsByDay } from './historyLookback';
-import { makeCompletedLog } from '../testFixtures';
+import type { WorkoutLog } from '@/domain';
+import { getRecentSessionsByFocus, getRecentSessionsSharingFocus } from './historyLookback';
+import { LOWER_OLYMPIC, UPPER_GYM, makeCompletedLog } from '../testFixtures';
 
-describe('getRecentSessionsByDay', () => {
-  it('keeps Tuesday and Thursday history independent', () => {
+describe('getRecentSessionsByFocus', () => {
+  it('filters to sessions that include the focus', () => {
     const history = [
-      makeCompletedLog('tuesday', '2026-07-07'),
-      makeCompletedLog('thursday', '2026-07-09'),
-      makeCompletedLog('tuesday', '2026-06-30'),
+      makeCompletedLog(LOWER_OLYMPIC, '2026-07-07'),
+      makeCompletedLog(UPPER_GYM, '2026-07-09'),
+      makeCompletedLog(['lower', 'conditioning'], '2026-06-30'),
     ];
-    const tuesdays = getRecentSessionsByDay(history, 'tuesday');
-    expect(tuesdays).toHaveLength(2);
-    expect(tuesdays.every((log) => log.day === 'tuesday')).toBe(true);
+    const lower = getRecentSessionsByFocus(history, 'lower');
+    expect(lower).toHaveLength(2);
+    expect(lower.every((log: WorkoutLog) => log.focuses.includes('lower'))).toBe(true);
   });
 
   it('sorts most-recent-first', () => {
     const history = [
-      makeCompletedLog('tuesday', '2026-06-23'),
-      makeCompletedLog('tuesday', '2026-07-07'),
-      makeCompletedLog('tuesday', '2026-06-30'),
+      makeCompletedLog(LOWER_OLYMPIC, '2026-06-23'),
+      makeCompletedLog(LOWER_OLYMPIC, '2026-07-07'),
+      makeCompletedLog(LOWER_OLYMPIC, '2026-06-30'),
     ];
-    const result = getRecentSessionsByDay(history, 'tuesday');
-    expect(result.map((log) => log.date)).toEqual(['2026-07-07', '2026-06-30', '2026-06-23']);
+    const result = getRecentSessionsByFocus(history, 'olympic');
+    expect(result.map((log: WorkoutLog) => log.date)).toEqual(['2026-07-07', '2026-06-30', '2026-06-23']);
   });
 
   it('excludes uncompleted sessions', () => {
-    const incomplete = { ...makeCompletedLog('tuesday', '2026-07-07'), completed: false };
-    const result = getRecentSessionsByDay([incomplete], 'tuesday');
-    expect(result).toHaveLength(0);
+    const incomplete = { ...makeCompletedLog(LOWER_OLYMPIC, '2026-07-07'), completed: false };
+    expect(getRecentSessionsByFocus([incomplete], 'lower')).toHaveLength(0);
   });
 
   it('respects the limit', () => {
-    const history = Array.from({ length: 10 }, (_, i) => makeCompletedLog('tuesday', `2026-0${(i % 9) + 1}-01`));
-    expect(getRecentSessionsByDay(history, 'tuesday', 3)).toHaveLength(3);
+    const history = Array.from({ length: 10 }, (_, i) => makeCompletedLog(LOWER_OLYMPIC, `2026-0${(i % 9) + 1}-01`));
+    expect(getRecentSessionsByFocus(history, 'lower', 3)).toHaveLength(3);
+  });
+});
+
+describe('getRecentSessionsSharingFocus', () => {
+  it('matches sessions that share at least one focus', () => {
+    const history = [
+      makeCompletedLog(LOWER_OLYMPIC, '2026-07-07'),
+      makeCompletedLog(UPPER_GYM, '2026-07-09'),
+    ];
+    expect(getRecentSessionsSharingFocus(history, ['gymnastics'])).toHaveLength(1);
+    expect(getRecentSessionsSharingFocus(history, ['lower', 'upper'])).toHaveLength(2);
   });
 });

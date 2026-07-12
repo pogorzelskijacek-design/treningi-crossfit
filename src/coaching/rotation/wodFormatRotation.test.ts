@@ -9,7 +9,7 @@ describe('pickNextWodFormat', () => {
   });
 
   it('does not repeat the most recently used format while others remain untried', () => {
-    const history = [makeCompletedLog('thursday', '2026-07-09', { wodFormat: WOD_FORMAT_ROTATION[0] })];
+    const history = [makeCompletedLog(['upper', 'gymnastics'], '2026-07-09', { wodFormat: WOD_FORMAT_ROTATION[0] })];
     expect(pickNextWodFormat(history)).not.toBe(WOD_FORMAT_ROTATION[0]);
   });
 });

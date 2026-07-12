@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import type { TrainingDay } from '@/domain';
+import type { SessionFocus } from '@/domain';
+import { focusesLabel } from '@/domain';
 import type { ReadinessInput } from '@/context/useTodayWorkout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,12 +11,12 @@ import { SliderField } from '@/components/common/SliderField';
 import { cn } from '@/lib/utils';
 
 interface ReadinessFormProps {
-  day: TrainingDay;
+  focuses: SessionFocus[];
   onSubmit: (input: ReadinessInput) => unknown;
   submitting?: boolean;
 }
 
-export function ReadinessForm({ day, onSubmit, submitting }: ReadinessFormProps) {
+export function ReadinessForm({ focuses, onSubmit, submitting }: ReadinessFormProps) {
   const [energy, setEnergy] = useState(6);
   const [recovery, setRecovery] = useState(6);
   const [soreness, setSoreness] = useState(3);
@@ -42,8 +43,7 @@ export function ReadinessForm({ day, onSubmit, submitting }: ReadinessFormProps)
       <CardHeader>
         <CardTitle>How are you feeling today?</CardTitle>
         <CardDescription>
-          {day === 'tuesday' ? 'Lower Body + Olympic Lifting' : 'Upper Body + Gymnastics'} day — a few questions
-          before your coach programs today&apos;s session.
+          {focusesLabel(focuses)} — a few questions before your coach programs today&apos;s session.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -97,7 +97,7 @@ export function ReadinessForm({ day, onSubmit, submitting }: ReadinessFormProps)
           </div>
 
           <div className="space-y-2">
-            <Label>Did you complete {day === 'tuesday' ? "Monday's Hyrox class" : 'your last scheduled session'}?</Label>
+            <Label>Did you complete your last scheduled session (e.g. yesterday&apos;s class)?</Label>
             <div className="flex gap-2">
               <Button
                 type="button"

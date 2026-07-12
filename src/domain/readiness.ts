@@ -1,9 +1,9 @@
-import type { TrainingDay } from './trainingDay';
+import type { SessionFocus } from './trainingDay';
 
 export interface ReadinessCheckin {
   id: string;
   date: string;
-  day: TrainingDay;
+  focuses: SessionFocus[];
   /** 1-10, how energetic the athlete feels right now. */
   energy: number;
   /** 1-10, subjective recovery/readiness to train. */

@@ -1,11 +1,4 @@
-import type {
-  GeneratedWorkout,
-  PersonalRecord,
-  ReadinessCheckin,
-  TrainingDay,
-  UserProfile,
-  WorkoutLog,
-} from '@/domain';
+import type { GeneratedWorkout, PersonalRecord, ReadinessCheckin, UserProfile, WorkoutLog } from '@/domain';
 
 /**
  * All repository methods are async even though the localStorage implementation
@@ -15,13 +8,12 @@ import type {
 export interface WorkoutRepository {
   getAll(): Promise<WorkoutLog[]>;
   getById(id: string): Promise<WorkoutLog | null>;
-  getRecentByDay(day: TrainingDay, limit: number): Promise<WorkoutLog[]>;
   save(log: WorkoutLog): Promise<void>;
   delete(id: string): Promise<void>;
 
   saveGeneratedWorkout(workout: GeneratedWorkout): Promise<void>;
   getGeneratedWorkoutById(id: string): Promise<GeneratedWorkout | null>;
-  getRecentGeneratedByDay(day: TrainingDay, limit: number): Promise<GeneratedWorkout[]>;
+  getRecentGenerated(limit: number): Promise<GeneratedWorkout[]>;
 }
 
 export interface ProfileRepository {

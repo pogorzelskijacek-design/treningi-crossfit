@@ -1,6 +1,6 @@
-import { Users, Dumbbell, Bed, Trophy } from 'lucide-react';
+import { Users, Dumbbell, Bed, Trophy, type LucideIcon } from 'lucide-react';
 import type { DayPlan, WeeklySchedule } from '@/domain';
-import { isGeneratedPlan } from '@/domain';
+import { dayPlanLabel, isGeneratedPlan } from '@/domain';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { weekdayOf, todayIso } from '@/lib/date';
@@ -29,13 +29,12 @@ const DAY_ABBR: Record<keyof WeeklySchedule, string> = {
   sunday: 'Sun',
 };
 
-const SCHEDULE_META: Record<DayPlan, { label: string; icon: typeof Users }> = {
-  hyrox_class: { label: 'Hyrox class', icon: Users },
-  generated_lower: { label: 'Lower + Olympic', icon: Dumbbell },
-  generated_upper: { label: 'Upper + Gymnastics', icon: Dumbbell },
-  team_wod_optional: { label: 'Team WOD (optional)', icon: Trophy },
-  rest: { label: 'Rest', icon: Bed },
-};
+function planIcon(plan: DayPlan): LucideIcon {
+  if (plan.kind === 'generated') return Dumbbell;
+  if (plan.kind === 'hyrox_class') return Users;
+  if (plan.kind === 'team_wod_optional') return Trophy;
+  return Bed;
+}
 
 export function WeeklyScheduleCard({ schedule }: WeeklyScheduleCardProps) {
   const today = weekdayOf(todayIso());
@@ -47,10 +46,10 @@ export function WeeklyScheduleCard({ schedule }: WeeklyScheduleCardProps) {
       </CardHeader>
       <CardContent className="space-y-1.5">
         {DAY_ORDER.map((day) => {
-          const meta = SCHEDULE_META[schedule[day]];
-          const Icon = meta.icon;
+          const plan = schedule[day];
+          const Icon = planIcon(plan);
           const isToday = day === today;
-          const isGenerated = isGeneratedPlan(schedule[day]);
+          const isGenerated = isGeneratedPlan(plan);
           return (
             <div
               key={day}
@@ -66,7 +65,7 @@ export function WeeklyScheduleCard({ schedule }: WeeklyScheduleCardProps) {
                 className={cn('size-4', isGenerated ? 'text-primary' : 'text-muted-foreground')}
               />
               <span className={cn('text-sm', isGenerated ? 'font-medium' : 'text-muted-foreground')}>
-                {meta.label}
+                {dayPlanLabel(plan)}
               </span>
               {isToday && (
                 <span className="ml-auto text-[10px] font-semibold uppercase tracking-wide text-primary">
