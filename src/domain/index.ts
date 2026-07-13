@@ -5,4 +5,5 @@ export * from './readiness';
 export * from './workoutLog';
 export * from './personalRecord';
 export * from './userProfile';
+export * from './knowledgeSource';
 export * from './migrate';

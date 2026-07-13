@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   profile: `${NAMESPACE}:profile`,
   prs: `${NAMESPACE}:prs`,
   readiness: `${NAMESPACE}:readiness`,
+  knowledgeSources: `${NAMESPACE}:knowledgeSources`,
 } as const;
 
 export function getJSON<T>(key: string, fallback: T): T {

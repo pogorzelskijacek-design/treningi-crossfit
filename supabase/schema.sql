@@ -60,12 +60,25 @@ create table if not exists public.readiness_checkins (
 create index if not exists readiness_checkins_user_idx
   on public.readiness_checkins (user_id, date desc);
 
+-- ---------- knowledge sources (the coach's curated "curriculum") ----------
+create table if not exists public.knowledge_sources (
+  id text primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  category text not null,
+  title text not null,
+  added_at timestamptz not null default now(),
+  data jsonb not null
+);
+create index if not exists knowledge_sources_user_idx
+  on public.knowledge_sources (user_id, added_at desc);
+
 -- ---------- Row-Level Security ----------
 alter table public.profiles          enable row level security;
 alter table public.generated_workouts enable row level security;
 alter table public.workout_logs      enable row level security;
 alter table public.personal_records  enable row level security;
 alter table public.readiness_checkins enable row level security;
+alter table public.knowledge_sources enable row level security;
 
 -- One policy per table: a user may read/insert/update/delete only their own rows.
 do $$
@@ -73,7 +86,8 @@ declare
   t text;
 begin
   foreach t in array array[
-    'profiles', 'generated_workouts', 'workout_logs', 'personal_records', 'readiness_checkins'
+    'profiles', 'generated_workouts', 'workout_logs', 'personal_records', 'readiness_checkins',
+    'knowledge_sources'
   ]
   loop
     execute format('drop policy if exists "own rows" on public.%I;', t);

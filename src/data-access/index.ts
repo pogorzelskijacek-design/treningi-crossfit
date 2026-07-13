@@ -4,10 +4,12 @@ import { localWorkoutRepository } from './localStorage/workoutRepository';
 import { localProfileRepository } from './localStorage/profileRepository';
 import { localPRRepository } from './localStorage/prRepository';
 import { localReadinessRepository } from './localStorage/readinessRepository';
+import { localKnowledgeRepository } from './localStorage/knowledgeRepository';
 import { supabaseWorkoutRepository } from './supabase/workoutRepository';
 import { supabaseProfileRepository } from './supabase/profileRepository';
 import { supabasePRRepository } from './supabase/prRepository';
 import { supabaseReadinessRepository } from './supabase/readinessRepository';
+import { supabaseKnowledgeRepository } from './supabase/knowledgeRepository';
 
 export type * from './types';
 
@@ -23,6 +25,7 @@ export function getRepositories(): Repositories {
       profile: supabaseProfileRepository,
       prs: supabasePRRepository,
       readiness: supabaseReadinessRepository,
+      knowledge: supabaseKnowledgeRepository,
     };
   }
   return {
@@ -30,5 +33,6 @@ export function getRepositories(): Repositories {
     profile: localProfileRepository,
     prs: localPRRepository,
     readiness: localReadinessRepository,
+    knowledge: localKnowledgeRepository,
   };
 }

@@ -12,6 +12,7 @@ import { HistoryPage } from '@/pages/HistoryPage';
 import { ProgressPage } from '@/pages/ProgressPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { ExerciseCatalogPage } from '@/pages/ExerciseCatalogPage';
+import { KnowledgePage } from '@/pages/KnowledgePage';
 import { AuthPage } from '@/pages/AuthPage';
 
 function AppRoutes() {
@@ -23,6 +24,7 @@ function AppRoutes() {
           <Route path="generate" element={<GenerateWorkoutPage />} />
           <Route path="generate/log/:generatedWorkoutId" element={<LogWorkoutPage />} />
           <Route path="exercises" element={<ExerciseCatalogPage />} />
+          <Route path="knowledge" element={<KnowledgePage />} />
           <Route path="history" element={<HistoryPage />} />
           <Route path="progress" element={<ProgressPage />} />
           <Route path="profile" element={<ProfilePage />} />

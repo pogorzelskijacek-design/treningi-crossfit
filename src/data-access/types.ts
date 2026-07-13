@@ -1,4 +1,11 @@
-import type { GeneratedWorkout, PersonalRecord, ReadinessCheckin, UserProfile, WorkoutLog } from '@/domain';
+import type {
+  GeneratedWorkout,
+  KnowledgeSource,
+  PersonalRecord,
+  ReadinessCheckin,
+  UserProfile,
+  WorkoutLog,
+} from '@/domain';
 
 /**
  * All repository methods are async even though the localStorage implementation
@@ -33,9 +40,17 @@ export interface ReadinessRepository {
   getRecent(limit: number): Promise<ReadinessCheckin[]>;
 }
 
+/** Athlete-added knowledge sources (the curated seed set lives in `@/data`, not here). */
+export interface KnowledgeRepository {
+  getAll(): Promise<KnowledgeSource[]>;
+  save(source: KnowledgeSource): Promise<void>;
+  delete(id: string): Promise<void>;
+}
+
 export interface Repositories {
   workouts: WorkoutRepository;
   profile: ProfileRepository;
   prs: PRRepository;
   readiness: ReadinessRepository;
+  knowledge: KnowledgeRepository;
 }
