@@ -42,6 +42,12 @@ export interface KnowledgeSource {
   type: KnowledgeSourceType;
   url?: string;
   notes?: string;
+  /**
+   * Ingested source text the AI coach can quote (Phase 2 / RAG). Pasted notes,
+   * key passages, or extracted document text. A source is "citable" only once
+   * this is filled. Stays inside the jsonb `data` payload — no SQL change.
+   */
+  content?: string;
   /** Freely / openly available (vs. a paid resource the athlete owns). */
   isFree: boolean;
   status: KnowledgeSourceStatus;

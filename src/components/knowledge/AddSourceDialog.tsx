@@ -49,6 +49,7 @@ export function AddSourceDialog({ open, onOpenChange, onAdd }: AddSourceDialogPr
   const [type, setType] = useState<KnowledgeSourceType>('article');
   const [url, setUrl] = useState('');
   const [notes, setNotes] = useState('');
+  const [content, setContent] = useState('');
   const [isFree, setIsFree] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -59,6 +60,7 @@ export function AddSourceDialog({ open, onOpenChange, onAdd }: AddSourceDialogPr
     setType('article');
     setUrl('');
     setNotes('');
+    setContent('');
     setIsFree(true);
   }
 
@@ -75,6 +77,7 @@ export function AddSourceDialog({ open, onOpenChange, onAdd }: AddSourceDialogPr
         type,
         url: url.trim() || undefined,
         notes: notes.trim() || undefined,
+        content: content.trim() || undefined,
         isFree,
         status: 'linked',
         addedAt: new Date().toISOString(),
@@ -177,6 +180,17 @@ export function AddSourceDialog({ open, onOpenChange, onAdd }: AddSourceDialogPr
               onChange={(e) => setNotes(e.target.value)}
               placeholder="What this source covers and why it's credible."
               rows={2}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="src-content">Text for the AI coach to quote (optional)</Label>
+            <Textarea
+              id="src-content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Paste key passages or your own notes from this source. The AI coach can only cite sources that have text here."
+              rows={4}
             />
           </div>
 

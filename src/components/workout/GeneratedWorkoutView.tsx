@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExerciseVideoDialog } from '@/components/exercises/ExerciseVideoDialog';
+import { CoachReasoning } from '@/components/workout/CoachReasoning';
 import { formatDateLong } from '@/lib/date';
 import { formatWeight } from '@/lib/weight';
 
@@ -50,6 +51,8 @@ export function GeneratedWorkoutView({ workout, onLogWorkout }: GeneratedWorkout
         .map((section) => (
           <SectionCard key={section.type} section={section} onPlay={(id, name) => setActive({ id, name })} />
         ))}
+
+      <CoachReasoning workout={workout} />
 
       {onLogWorkout && (
         <Button onClick={onLogWorkout} size="lg" className="w-full">
